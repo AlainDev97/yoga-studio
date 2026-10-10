@@ -7,7 +7,7 @@ function Navbar(): ReactElement {
   const user = authService.getCurrentUser();
   const isAuthenticated = authService.isAuthenticated();
 
-  const handleLogout = (): any => {
+  const handleLogout = (): void => {
     authService.logout();
     navigate("/login");
   };

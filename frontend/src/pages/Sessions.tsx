@@ -109,7 +109,7 @@ function Sessions() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sessions.map((session: any) => (
+            {sessions.map((session: Session) => (
               <div
                 key={session.id}
                 className="bg-white rounded-lg shadow-md p-6"
