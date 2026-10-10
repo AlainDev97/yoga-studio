@@ -1,14 +1,15 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services/auth.service';
+import type { ReactElement } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../services/auth.service";
 
-function Navbar(props: any) {
+function Navbar(): ReactElement {
   const navigate = useNavigate();
   const user = authService.getCurrentUser();
   const isAuthenticated = authService.isAuthenticated();
 
   const handleLogout = (): any => {
     authService.logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
