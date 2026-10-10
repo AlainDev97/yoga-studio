@@ -1,40 +1,66 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { authService } from "../services/auth.service";
 import { Session } from "../types";
+import axios from "axios";
 
 function SessionDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [session, setSession] = useState<any>(null);
-  const [loading, setLoading] = useState<any>(true);
-  const [error, setError] = useState<any>("");
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
+  const fetchSession = useCallback(
+    async (signal?: AbortSignal): Promise<void> => {
+      if (!id) {
+        setError("Session ID is missing");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await api.get<Session>(`/session/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal,
+        });
+
+        if (!signal?.aborted) {
+          setSession(response.data);
+        }
+      } catch (err: unknown) {
+        if (!axios.isCancel(err) && !signal?.aborted) {
+          setError("Failed to load session details");
+          console.error(err);
+        }
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
+      }
+    },
+    [id, token],
+  );
+
   useEffect(() => {
-    fetchSession();
-  }, [id]);
+    const controller = new AbortController();
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      setLoading(true);
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSession(response.data);
-    } catch (err: any) {
-      setError("Failed to load session details");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    void fetchSession(controller.signal);
 
-  const handleParticipate = async (): Promise<any> => {
+    return () => {
+      controller.abort();
+    };
+  }, [fetchSession]);
+
+  const handleParticipate = async (): Promise<void> => {
     if (!user || !id) {
       return;
     }
@@ -49,14 +75,15 @@ function SessionDetail() {
           },
         },
       );
-      fetchSession();
-    } catch (err: any) {
+
+      await fetchSession();
+    } catch (err: unknown) {
       alert("Failed to join session");
       console.error(err);
     }
   };
 
-  const handleUnparticipate = async (): Promise<any> => {
+  const handleUnparticipate = async (): Promise<void> => {
     if (!user || !id) {
       return;
     }
@@ -67,14 +94,19 @@ function SessionDetail() {
           Authorization: `Bearer ${token}`,
         },
       });
-      fetchSession();
-    } catch (err: any) {
+
+      await fetchSession();
+    } catch (err: unknown) {
       alert("Failed to leave session");
       console.error(err);
     }
   };
 
-  const handleDelete = async (): Promise<any> => {
+  const handleDelete = async (): Promise<void> => {
+    if (!id || !user?.admin) {
+      return;
+    }
+
     if (!window.confirm("Are you sure you want to delete this session?")) {
       return;
     }
@@ -85,8 +117,9 @@ function SessionDetail() {
           Authorization: `Bearer ${token}`,
         },
       });
+
       navigate("/sessions");
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert("Failed to delete session");
       console.error(err);
     }

@@ -1,104 +1,157 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import api from '../services/api';
-import { authService } from '../services/auth.service';
-import { Teacher, Session } from '../types';
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../services/api";
+import { authService } from "../services/auth.service";
+import { Teacher, Session, SessionFormData } from "../types";
+import type { ChangeEvent, FormEvent } from "react";
+import axios from "axios";
 
 function SessionForm() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditMode = !!id;
 
-  const [formData, setFormData] = useState<any>({
-    name: '',
-    date: '',
-    description: '',
-    teacherId: '',
+  const [formData, setFormData] = useState<SessionFormData>({
+    name: "",
+    date: "",
+    description: "",
+    teacherId: "",
   });
-  const [teachers, setTeachers] = useState<any>([]);
-  const [loading, setLoading] = useState<any>(false);
-  const [error, setError] = useState<any>('');
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
   const user = authService.getCurrentUser();
   const token = authService.getToken();
 
   // Redirect if not admin
   useEffect(() => {
-    if (!user || !user.admin) {
-      navigate('/sessions');
+    if (!user?.admin) {
+      navigate("/sessions");
     }
-  }, [user, navigate]);
+  }, [user?.admin, navigate]);
 
   useEffect(() => {
-    fetchTeachers();
-    if (isEditMode) {
-      fetchSession();
+    if (!user?.admin) {
+      return;
     }
-  }, [id]);
 
-  const fetchTeachers = async (): Promise<any> => {
-    try {
-      const response = await api.get<Teacher[]>('/teacher', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setTeachers(response.data);
-    } catch (err: any) {
-      console.error('Failed to fetch teachers', err);
+    const controller = new AbortController();
+
+    const fetchData = async (): Promise<void> => {
+      try {
+        setError("");
+
+        const teachersResponse = await api.get<Teacher[]>("/teacher", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        setTeachers(teachersResponse.data);
+
+        if (isEditMode && id) {
+          const sessionResponse = await api.get<Session>(`/session/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            signal: controller.signal,
+          });
+
+          if (controller.signal.aborted) return;
+
+          const session = sessionResponse.data;
+
+          setFormData({
+            name: session.name,
+            date: new Date(session.date).toISOString().split("T")[0],
+            description: session.description,
+            teacherId: session.teacher.id,
+          });
+        }
+      } catch (err: unknown) {
+        if (!axios.isCancel(err) && !controller.signal.aborted) {
+          setError("Failed to load form data");
+          console.error(err);
+        }
+      }
+    };
+
+    void fetchData();
+
+    return () => {
+      controller.abort();
+    };
+  }, [id, isEditMode, token, user?.admin]);
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ): void => {
+    const { name, value } = e.target;
+
+    if (name === "teacherId") {
+      setFormData((prev) => ({
+        ...prev,
+        teacherId: value === "" ? "" : Number(value),
+      }));
+      return;
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const fetchSession = async (): Promise<any> => {
-    try {
-      const response = await api.get<Session>(`/session/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const session = response.data;
-      setFormData({
-        name: session.name,
-        date: new Date(session.date).toISOString().split('T')[0],
-        description: session.description,
-        teacherId: session.teacher.id,
-      });
-    } catch (err: any) {
-      setError('Failed to load session');
-      console.error(err);
-    }
-  };
-
-  const handleChange = (e: any): any => {
-    const value =
-      e.target.name === 'teacherId' ? parseInt(e.target.value) : e.target.value;
-    setFormData({
-      ...formData,
-      [e.target.name]: value,
-    });
-  };
-
-  const handleSubmit = async (e: any): Promise<any> => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
-    setError('');
+
+    if (!user?.admin) {
+      setError("Unauthorized");
+      return;
+    }
+
+    if (formData.teacherId === "") {
+      setError("Please select a teacher");
+      return;
+    }
+
+    setError("");
     setLoading(true);
+
+    const payload: SessionFormData = {
+      ...formData,
+      teacherId: formData.teacherId,
+    };
 
     try {
       if (isEditMode) {
-        await api.put(`/session/${id}`, formData, {
+        await api.put(`/session/${id}`, payload, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       } else {
-        await api.post('/session', formData, {
+        await api.post("/session", payload, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
       }
-      navigate('/sessions');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save session');
+
+      navigate("/sessions");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        const message = err.response?.data?.message;
+
+        setError(
+          typeof message === "string" ? message : "Failed to save session",
+        );
+      } else {
+        setError("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
@@ -109,14 +162,14 @@ function SessionForm() {
       <div className="container mx-auto px-4 max-w-2xl">
         <div className="bg-white rounded-lg shadow-md p-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">
-            {isEditMode ? 'Edit Session' : 'Create New Session'}
+            {isEditMode ? "Edit Session" : "Create New Session"}
           </h1>
 
-          {error ? (
+          {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               {error}
             </div>
-          ) : null}
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -159,7 +212,7 @@ function SessionForm() {
                 required
               >
                 <option value="">Select a teacher</option>
-                {teachers.map((teacher: any) => (
+                {teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.firstName} {teacher.lastName}
                   </option>
@@ -187,11 +240,15 @@ function SessionForm() {
                 disabled={loading}
                 className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
               >
-                {loading ? 'Saving...' : isEditMode ? 'Update Session' : 'Create Session'}
+                {loading
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Session"
+                    : "Create Session"}
               </button>
               <button
                 type="button"
-                onClick={() => navigate('/sessions')}
+                onClick={() => navigate("/sessions")}
                 className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400"
               >
                 Cancel
