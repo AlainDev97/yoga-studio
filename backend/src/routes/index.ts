@@ -15,9 +15,14 @@ const teacherController = new TeacherController();
 const userController = new UserController();
 
 // Auth routes (public)
-router.post("/api/auth/login", (req, res) => authController.login(req, res));
-router.post("/api/auth/register", (req, res) =>
-  authController.register(req, res),
+router.post(
+  "/api/auth/login",
+  asyncHandler((req, res) => authController.login(req, res)),
+);
+
+router.post(
+  "/api/auth/register",
+  asyncHandler((req, res) => authController.register(req, res)),
 );
 
 // Session routes (protected)
