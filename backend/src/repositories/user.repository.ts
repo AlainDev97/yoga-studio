@@ -22,4 +22,23 @@ export class UserRepository {
       },
     });
   }
+
+  async findById(id: number) {
+    return prisma.user.findUnique({
+      where: { id },
+    });
+  }
+
+  async deleteById(id: number) {
+    return prisma.user.delete({
+      where: { id },
+    });
+  }
+
+  async promoteToAdmin(id: number) {
+    return prisma.user.update({
+      where: { id },
+      data: { admin: true },
+    });
+  }
 }
