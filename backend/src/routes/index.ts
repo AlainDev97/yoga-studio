@@ -1,4 +1,7 @@
 import { Router } from "express";
+import { validateBody } from "../middleware/validate.middleware";
+import { CreateSessionSchema, UpdateSessionSchema } from "../dto/session.dto";
+import { LoginSchema, RegisterSchema } from "../dto/auth.dto";
 import { AuthController } from "../controllers/auth.controller";
 import { SessionController } from "../controllers/session.controller";
 import { TeacherController } from "../controllers/teacher.controller";
@@ -17,11 +20,13 @@ const userController = new UserController();
 // Auth routes (public)
 router.post(
   "/api/auth/login",
+  validateBody(LoginSchema),
   asyncHandler((req, res) => authController.login(req, res)),
 );
 
 router.post(
   "/api/auth/register",
+  validateBody(RegisterSchema),
   asyncHandler((req, res) => authController.register(req, res)),
 );
 
@@ -41,12 +46,14 @@ router.get(
 router.post(
   "/api/session",
   authMiddleware,
+  validateBody(CreateSessionSchema),
   asyncHandler((req, res) => sessionController.create(req, res)),
 );
 
 router.put(
   "/api/session/:id",
   authMiddleware,
+  validateBody(UpdateSessionSchema),
   asyncHandler((req, res) => sessionController.update(req, res)),
 );
 
