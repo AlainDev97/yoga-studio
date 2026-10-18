@@ -173,10 +173,14 @@ function SessionForm() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label
+                htmlFor="name"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
                 Session Name
               </label>
               <input
+                id="name"
                 type="text"
                 name="name"
                 value={formData.name}
@@ -187,10 +191,14 @@ function SessionForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label
+                htmlFor="date"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
                 Date
               </label>
               <input
+                id="date"
                 type="date"
                 name="date"
                 value={formData.date}
@@ -201,10 +209,14 @@ function SessionForm() {
             </div>
 
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label
+                htmlFor="teacherId"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
                 Teacher
               </label>
               <select
+                id="teacherId"
                 name="teacherId"
                 value={formData.teacherId}
                 onChange={handleChange}
@@ -221,10 +233,14 @@ function SessionForm() {
             </div>
 
             <div className="mb-6">
-              <label className="block text-gray-700 text-sm font-bold mb-2">
+              <label
+                htmlFor="description"
+                className="block text-gray-700 text-sm font-bold mb-2"
+              >
                 Description
               </label>
               <textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
