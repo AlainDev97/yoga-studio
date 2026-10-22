@@ -1,9 +1,6 @@
 import { Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { SessionService } from "../services/session.service";
-
-const prisma = new PrismaClient();
 
 export class SessionController {
   private readonly sessionService = new SessionService();
