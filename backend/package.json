@@ -6,15 +6,15 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "prisma:studio": "prisma studio",
     "e2e:db:status": "dotenv -e .env.e2e -- prisma migrate status",
     "e2e:db:migrate": "dotenv -e .env.e2e -- prisma migrate deploy",
-    "e2e:start": "dotenv -e .env.e2e -- node dist/app.js",
     "e2e:db:seed": "dotenv -e .env.e2e -- ts-node prisma/seed.ts",
+    "e2e:start": "dotenv -e .env.e2e -- node dist/server.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
