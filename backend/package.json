@@ -14,7 +14,10 @@
     "e2e:db:status": "dotenv -e .env.e2e -- prisma migrate status",
     "e2e:db:migrate": "dotenv -e .env.e2e -- prisma migrate deploy",
     "e2e:start": "dotenv -e .env.e2e -- node dist/app.js",
-    "e2e:db:seed": "dotenv -e .env.e2e -- ts-node prisma/seed.ts"
+    "e2e:db:seed": "dotenv -e .env.e2e -- ts-node prisma/seed.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -34,10 +37,12 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22",
+    "@vitest/coverage-v8": "^5.0.5",
     "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.11",
     "prisma": "^5.20.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   }
 }
