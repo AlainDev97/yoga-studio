@@ -10,7 +10,10 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "e2e:db:status": "dotenv -e .env.e2e -- prisma migrate status",
+    "e2e:db:migrate": "dotenv -e .env.e2e -- prisma migrate deploy",
+    "e2e:start": "dotenv -e .env.e2e -- node dist/app.js"
   },
   "keywords": [],
   "author": "",
@@ -30,6 +33,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22",
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.11",
     "prisma": "^5.20.0",
     "ts-node": "^10.9.2",
